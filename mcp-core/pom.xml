@@ -3,93 +3,136 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>io.modelcontextprotocol.sdk</groupId>
-		<artifactId>mcp-parent</artifactId>
-		<version>0.16.0-SNAPSHOT</version>
-	</parent>
-	<artifactId>mcp-core</artifactId>
+	
+	<!-- Flowfinity custom fork coordinates -->
+	<groupId>Flowfinity</groupId>
+	<artifactId>flowfinity-mcp-core</artifactId>
+	<version>0.16.0-flowfinity-1</version>
 	<packaging>jar</packaging>
-	<name>Java MCP SDK Core</name>
-	<description>Core classes of the Java SDK implementation of the Model Context Protocol, enabling seamless integration with language models and AI tools</description>
-	<url>https://github.com/modelcontextprotocol/java-sdk</url>
+	
+	<name>Flowfinity MCP SDK Core</name>
+	<description>Flowfinity fork of Java MCP SDK Core with per-session tool filtering capability</description>
+	<url>https://github.com/flowfinity/ff-mcp-sdk</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<java.version>17</java.version>
+		
+		<!-- Core dependency versions -->
+		<slf4j-api.version>2.0.9</slf4j-api.version>
+		<jackson.version>2.17.0</jackson.version>
+		<reactor-bom.version>2023.0.11</reactor-bom.version>
+		<jakarta.servlet.version>6.0.0</jakarta.servlet.version>
+		
+		<!-- Test dependency versions -->
+		<springframework.version>6.1.15</springframework.version>
+		<junit.version>5.10.1</junit.version>
+		<assertj.version>3.24.2</assertj.version>
+		<mockito.version>5.8.0</mockito.version>
+		<byte-buddy.version>1.14.11</byte-buddy.version>
+		<testcontainers.version>1.19.3</testcontainers.version>
+		<awaitility.version>4.2.0</awaitility.version>
+		<logback.version>1.4.14</logback.version>
+		<json-unit-assertj.version>3.2.7</json-unit-assertj.version>
+		<tomcat.version>10.1.17</tomcat.version>
+		<toxiproxy.version>1.19.3</toxiproxy.version>
+		
+		<!-- Plugin versions -->
+		<maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+		<maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
+		<maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
+	</properties>
 
 	<scm>
-		<url>https://github.com/modelcontextprotocol/java-sdk</url>
-		<connection>git://github.com/modelcontextprotocol/java-sdk.git</connection>
-		<developerConnection>git@github.com/modelcontextprotocol/java-sdk.git</developerConnection>
+		<url>https://github.com/flowfinity/ff-mcp-sdk</url>
+		<connection>scm:git:git://github.com/flowfinity/ff-mcp-sdk.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/flowfinity/ff-mcp-sdk.git</developerConnection>
 	</scm>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- Import Reactor BOM for version management -->
+			<dependency>
+				<groupId>io.projectreactor</groupId>
+				<artifactId>reactor-bom</artifactId>
+				<version>${reactor-bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>
+			<!-- Maven Compiler Plugin -->
 			<plugin>
-				<groupId>biz.aQute.bnd</groupId>
-				<artifactId>bnd-maven-plugin</artifactId>
-				<version>${bnd-maven-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>bnd-process</id>
-						<goals>
-							<goal>bnd-process</goal>
-						</goals>
-						<configuration>
-							<bnd><![CDATA[
-								Bundle-Name:            Bundle ${project.groupId} : ${project.artifactId}
-								version:                ${versionmask;===;${version_cleanup;${project.version}}}
-								Bundle-SymbolicName:    ${project.groupId}.${project.artifactId}
-								Bundle-Version:         ${version}
-								Automatic-Module-Name:  ${project.groupId}.${project.artifactId}
-								Import-Package:         jakarta.*;resolution:=optional, \
-								                        *;
-								Export-Package:         io.modelcontextprotocol.*;version="${version}";-noimport:=true
-								-noimportjava:          true;
-								-nouses:                true;
-								-removeheaders:         Private-Package
-								]]>
-							</bnd>
-						</configuration>
-					</execution>
-				</executions>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+				<configuration>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
+					<release>${java.version}</release>
+					<parameters>true</parameters>
+				</configuration>
 			</plugin>
 
+			<!-- Maven JAR Plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
+				<version>${maven-jar-plugin.version}</version>
 				<configuration>
 					<archive>
-						<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
 					</archive>
 				</configuration>
+			</plugin>
+
+			<!-- Maven Surefire Plugin for tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${maven-surefire-plugin.version}</version>
 			</plugin>
 		</plugins>
 	</build>
 
 	<dependencies>
-        <dependency>
-            <groupId>io.modelcontextprotocol.sdk</groupId>
-            <artifactId>mcp-json</artifactId>
-            <version>0.16.0-SNAPSHOT</version>
-        </dependency>
+		<!-- MCP JSON dependency - using last stable release -->
+		<dependency>
+			<groupId>io.modelcontextprotocol.sdk</groupId>
+			<artifactId>mcp-json</artifactId>
+			<version>0.15.0</version>
+		</dependency>
 
+		<!-- SLF4J API for logging -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>${slf4j-api.version}</version>
 		</dependency>
 
+		<!-- Jackson Annotations -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
 			<version>${jackson.version}</version>
 		</dependency>
 
+		<!-- Project Reactor Core -->
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
 		</dependency>
 
-
-		<!-- Used by the HttpServletSseServerTransport -->
+		<!-- Jakarta Servlet API (provided scope - container will provide) -->
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
 			<artifactId>jakarta.servlet-api</artifactId>
@@ -97,14 +140,17 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- Test dependencies -->
-        <dependency>
-            <groupId>io.modelcontextprotocol.sdk</groupId>
-            <artifactId>mcp-json-jackson2</artifactId>
-            <version>0.16.0-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
+		<!-- ==================== TEST DEPENDENCIES ==================== -->
 
+		<!-- MCP JSON Jackson2 for tests -->
+		<dependency>
+			<groupId>io.modelcontextprotocol.sdk</groupId>
+			<artifactId>mcp-json-jackson2</artifactId>
+			<version>0.15.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Spring Framework for tests -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
@@ -112,16 +158,6 @@
 			<scope>test</scope>
 		</dependency>
 
-
-		<dependency>
-			<groupId>io.projectreactor.netty</groupId>
-			<artifactId>reactor-netty-http</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- The Spring Context is required due to the reactor-netty connector being dependent on
-		the Spring Lifecycle, as discussed here:
-		https://github.com/spring-projects/spring-framework/issues/31180 -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
@@ -136,24 +172,44 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Reactor Netty for tests -->
 		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<version>${assert4j.version}</version>
+			<groupId>io.projectreactor.netty</groupId>
+			<artifactId>reactor-netty-http</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- JUnit 5 -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
 			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-params</artifactId>
 			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- AssertJ for fluent assertions -->
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>${assertj.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Mockito for mocking -->
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
@@ -161,57 +217,26 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Mockito cannot mock this class: class java.net.http.HttpClient. the bytebuddy helps. -->
+		<!-- ByteBuddy for Mockito -->
 		<dependency>
 			<groupId>net.bytebuddy</groupId>
 			<artifactId>byte-buddy</artifactId>
 			<version>${byte-buddy.version}</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Reactor Test -->
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Testcontainers -->
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<version>${testcontainers.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.awaitility</groupId>
-			<artifactId>awaitility</artifactId>
-			<version>${awaitility.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>${logback.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>net.javacrumbs.json-unit</groupId>
-			<artifactId>json-unit-assertj</artifactId>
-			<version>${json-unit-assertj.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- Tomcat dependencies for testing -->
-		<dependency>
-			<groupId>org.apache.tomcat.embed</groupId>
-			<artifactId>tomcat-embed-core</artifactId>
-			<version>${tomcat.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat.embed</groupId>
-			<artifactId>tomcat-embed-websocket</artifactId>
-			<version>${tomcat.version}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -222,14 +247,52 @@
 			<scope>test</scope>
 		</dependency>
 
-        <!-- Test-only JSON library for the Gson-based McpJsonMapper example -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.10.1</version>
-            <scope>test</scope>
-        </dependency>
-	</dependencies>
+		<!-- Awaitility for async testing -->
+		<dependency>
+			<groupId>org.awaitility</groupId>
+			<artifactId>awaitility</artifactId>
+			<version>${awaitility.version}</version>
+			<scope>test</scope>
+		</dependency>
 
+		<!-- Logback for test logging -->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- JSON Unit for JSON assertions -->
+		<dependency>
+			<groupId>net.javacrumbs.json-unit</groupId>
+			<artifactId>json-unit-assertj</artifactId>
+			<version>${json-unit-assertj.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Embedded Tomcat for servlet tests -->
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-core</artifactId>
+			<version>${tomcat.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-websocket</artifactId>
+			<version>${tomcat.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Gson for test examples -->
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.10.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 </project>
