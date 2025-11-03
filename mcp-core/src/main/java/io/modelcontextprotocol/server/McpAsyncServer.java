@@ -90,6 +90,8 @@ import static io.modelcontextprotocol.spec.McpError.RESOURCE_NOT_FOUND;
  */
 public class McpAsyncServer {
 
+	private BiFunction<McpAsyncServerExchange, Tool, Boolean> toolFilter;
+
 	private static final Logger logger = LoggerFactory.getLogger(McpAsyncServer.class);
 
 	private final McpServerTransportProviderBase mcpTransportProvider;
@@ -316,6 +318,25 @@ public class McpAsyncServer {
 	// ---------------------------------------
 
 	/**
+	 * Sets a filter function to determine which tools are visible per session.
+	 * 
+	 * @param toolFilter Function that takes exchange and tool, returns true if tool 
+	 *                   should be visible for that session
+	 */
+	public void setToolFilter(BiFunction<McpAsyncServerExchange, Tool, Boolean> toolFilter) {
+		this.toolFilter = toolFilter;
+	}
+
+	/**
+	 * Gets the current tool filter.
+	 * 
+	 * @return The tool filter or null if not set
+	 */
+	public BiFunction<McpAsyncServerExchange, Tool, Boolean> getToolFilter() {
+		return this.toolFilter;
+	}
+
+	/**
 	 * Add a new tool call specification at runtime.
 	 * @param toolSpecification The tool specification to add
 	 * @return Mono that completes when clients have been notified of the change
@@ -509,8 +530,28 @@ public class McpAsyncServer {
 	}
 
 	private McpRequestHandler<McpSchema.ListToolsResult> toolsListRequestHandler() {
+
 		return (exchange, params) -> {
-			List<Tool> tools = this.tools.stream().map(McpServerFeatures.AsyncToolSpecification::tool).toList();
+
+			//			List<Tool> tools = this.tools.stream().map(McpServerFeatures.AsyncToolSpecification::tool)
+			//					.toList();
+
+			// Get all tools
+			List<Tool> tools = this.tools.stream().map(McpServerFeatures.AsyncToolSpecification::tool)
+					.filter(tool -> {
+						// Apply filter if configured
+						if (toolFilter != null) {
+							try {
+								return toolFilter.apply(exchange, tool);
+							} catch (Exception e) {
+								logger.error("Error filtering tool '{}': {}", tool.name(), e.getMessage(), e);
+								// On error, exclude tool for safety
+								return false;
+							}
+						}
+						// No filter = include all tools
+						return true;
+					}).toList();
 
 			return Mono.just(new McpSchema.ListToolsResult(tools, null));
 		};
