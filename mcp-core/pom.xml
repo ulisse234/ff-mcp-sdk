@@ -92,7 +92,8 @@
 							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 						</manifest>
 					</archive>
-				</configuration>
+					<finalName>ff-mcp-core</finalName>
+				</configuration>				
 			</plugin>
 
 			<!-- Maven Surefire Plugin for tests -->
